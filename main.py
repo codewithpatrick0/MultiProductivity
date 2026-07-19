@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from models import User
 from pydantic_models import UserCreate, UserResponse, TokenResponse
@@ -8,6 +9,18 @@ from database import get_session
 from credentials import hashing_password, verify_password_hash, create_tokens, check_refresh_token
 
 app = FastAPI()
+
+origins = [
+    "http://127.0.0.1:5500"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,       
+    allow_credentials=True,          
+    allow_headers=["*"],   
+    allow_methods=["*"]         
+)
 
 @app.post('/register', response_model=UserResponse)
 async def register_user(user_data: UserCreate, session: AsyncSession=Depends(get_session)):
@@ -71,10 +84,9 @@ async def login(
 
 @app.post('/refresh', response_model=TokenResponse)
 async def refresh(
-    x_refresh_token: str = Header(..., description='Insert you refresh token'),
+    user_id = Depends(check_refresh_token),
     session: AsyncSession = Depends(get_session)
     ):
-    user_id = check_refresh_token(x_refresh_token)
     
     result = await session.execute(
         select(User).where(User.id == user_id)

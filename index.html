@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiProdductivity</title>
+
+    <script src="scripts.js" defer></script>
+</head>
+<body>
+    <form action="/register" method="POST" id="form_register">
+
+        <label for="name_register">Name:</label>
+        <input type="text" id="name_register", name="name" required>
+
+        <label for="username_register">Username:</label>
+        <input type="text" id="username_register" name="username" required>
+
+        <label for="password_register">Password:</label>
+        <input type="text" id="password_register" name="password" required>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <form action="/login" method="POST" id="form_login">
+        
+        <label for="username_login">Username:</label>
+        <input type="text" id="username_login" name="username" required>
+
+        <label for="password_login">Password:</label>
+        <input type="text" id="password_login" name="password" required>
+
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>

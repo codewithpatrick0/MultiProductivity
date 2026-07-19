@@ -1,6 +1,6 @@
 from pwdlib import PasswordHash
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, APIKeyHeader
 from pwdlib.exceptions import UnknownHashError
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -11,6 +11,7 @@ import os
 load_dotenv()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+refresh_scheme=APIKeyHeader(name="X-Refresh-Token", description="Insert your refresh token", auto_error=True)
 SECRET_KEY = os.getenv("SECRET_KEY")
 REFRESH_SECRET_KEY = os.getenv("REFRESH_SECRET_KEY")
 
@@ -61,7 +62,7 @@ def check_access_token(access_token: str = Depends(oauth2_scheme)) -> int:
     except InvalidTokenError:
         raise credentials_exception
         
-def check_refresh_token(refresh_token: str) -> int:
+def check_refresh_token(refresh_token: str = Depends(refresh_scheme)) -> int:
 
     refresh_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
