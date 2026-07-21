@@ -58,7 +58,7 @@ def check_access_token(access_token: str = Depends(oauth2_scheme)) -> int:
         if payload.get("type") != "access":
             raise credentials_exception
         return payload.get("user_id")
-         
+        
     except InvalidTokenError:
         raise credentials_exception
         
