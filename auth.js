@@ -55,6 +55,12 @@ form_login.addEventListener('submit', async function(event){
             alert('You signed in')
             console.log('Server response:', result_login)
 
+            const accessToken = result_login.access_token
+            const refreshToken = result_login.refresh_token
+
+            localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('refresh_token', refreshToken);
+
             form_login.reset();
         } else {
             console.error('Server Error:', response_login.status);

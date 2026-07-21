@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MultiProductivity</title>
+    <script src="tasks.js" defer></script>
 </head>
 <body>
     <h1>MultiProductivity</h1>
@@ -11,11 +12,11 @@
     <!--Create task-->
     <form id="form_create_task">
         <label for="create_title">Title:</label>
-        <input type="text" id="create_title" name="create_title" placeholder="New Task">
+        <input type="text" id="create_title" name="title" placeholder="New Task">
         <br><br>
 
         <label for="create_info">Info:</label>
-        <input type="text" id="create_info" name="create_info" placeholder="Estudy math">
+        <input type="text" id="create_info" name="info" placeholder="Estudy math">
         <br><br>
 
         <button type="submit">Create task</button>
@@ -34,15 +35,15 @@
     <!--Form edit tasks-->
     <form id="form_edit_task">
         <label for="task_id_edit">Task ID:</label>
-        <input type="number" id="task_id_edit" name="task_id_edit" placeholder="1" required>
+        <input type="number" id="task_id_edit" name="task_id" placeholder="1" required>
         <br><br>
 
         <label for="title_edit">New title:</label>
-        <input type="text" id="title_edit" name="title_edit" placeholder="Title Task">
+        <input type="text" id="title_edit" name="title" placeholder="Title Task">
         <br><br>
 
         <label for="info_edit">New info:</label>
-        <input type="text" id="info_edit" name="info_edit" placeholder="Estudy math">
+        <input type="text" id="info_edit" name="info" placeholder="Estudy math">
         <br><br>
 
         <label for="status_edit">Status:</label>
