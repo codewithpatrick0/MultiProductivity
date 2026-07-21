@@ -22,7 +22,7 @@ app.add_middleware(
     allow_methods=["*"]         
 )
 
-@app.post('/register', response_model=UserResponse)
+@app.post('/register', response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user_data: UserCreate, session: AsyncSession=Depends(get_session)):
     
     result = await session.execute(
@@ -102,7 +102,7 @@ async def refresh(
         refresh_token=refresh_token
     )
 
-@app.post('/tasks', response_model=TaskResponse)
+@app.post('/tasks', response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 async def define_task(
     task: TaskCreate,
     user_id: int = Depends(check_access_token),

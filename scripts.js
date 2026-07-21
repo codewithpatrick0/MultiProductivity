@@ -58,7 +58,7 @@ form_login.addEventListener('submit', async function(event){
             form_login.reset();
         } else {
             console.error('Server Error:', response_login.status);
-            alert('There was a problem logging in.');
+            alert('Non-existent or incorrect username or password.');
         }
     } catch (error) {
         console.error('Network Error:', error);
