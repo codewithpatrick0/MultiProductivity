@@ -22,7 +22,7 @@ class TokenResponse(BaseResponseSchema):
     model_config = ConfigDict(from_attributes=True)
 
 class TaskCreate(BaseModel):
-    title: str = Field(min_length=10, max_length=100)
+    title: str = Field(max_length=100)
     info: str | None
 
 class TaskEdit(TaskCreate):
