@@ -23,14 +23,16 @@ class TokenResponse(BaseResponseSchema):
 
 class TaskCreate(BaseModel):
     title: str = Field(max_length=100)
-    info: str | None
+    info: str | None = "No info"
 
-class TaskEdit(TaskCreate):
-    status: Literal['pending', 'in progress', 'completed']
+class TaskEdit(BaseModel):
+    title: str | None = Field(None, max_length=100)
+    info: str | None = None
+    status: Literal['pending', 'in progress', 'completed'] = None
     
 class TaskResponse(BaseResponseSchema):
     id: int
     id_user: int
     title: str 
-    info: str | None 
+    info: str | None = None
     status: str = "pending"

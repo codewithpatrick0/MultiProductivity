@@ -144,7 +144,7 @@ async def obtain_tasks(
         print(f'Error interno: {e}')
         raise HTTPException(status_code=500, detail='The tasks could not be retrieved.')
     
-@app.put('/tasks/{task_id}', response_model=TaskResponse)
+@app.patch('/tasks/{task_id}', response_model=TaskResponse)
 async def edit_task(
     task_id: int,
     task: TaskEdit,
@@ -162,9 +162,12 @@ async def edit_task(
     if not extracted_task:
         raise HTTPException(status_code=404, detail='The ID does not exist or the task does not belong to you.')
     
-    extracted_task.title=task.title
-    extracted_task.info=task.info
-    extracted_task.status=task.status
+    if task.title :
+        extracted_task.title = task.title
+    if task.info:
+        extracted_task.info = task.info
+    if task.status:
+        extracted_task.status = task.status
 
     await session.commit()
     await session.refresh(extracted_task)

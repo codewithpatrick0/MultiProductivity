@@ -101,7 +101,7 @@ form_edit_task.addEventListener('submit', async function(event){
 
     try {
         const response_edit_task = await fetch(urlApiEditTask, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${access_token}`,
                 'Content-Type': 'application/json'
