@@ -1,3 +1,29 @@
+async function use_refresh_token(){
+    const refreshToken = localStorage.getItem('refresh_token')
+    const urlApi = 'http://127.0.0.1:8000/refresh'
+
+    try {
+        const response = await fetch(urlApi, {
+            method: 'POST',
+            headers: {
+                'X-Refresh-Token': localStorage.getItem('refresh_token')
+            }
+        })
+        if (response.ok) {
+            const result = await response.json();
+            console.log(result)
+            localStorage.setItem('access_token', result.access_token)
+            localStorage.setItem('refresh_token', result.refresh_token)
+            return true;
+        } else {
+            alert('Session expired')
+            console.log('Server response: ', response.status)
+            return false;
+        }
+    } catch (error){
+        return false;
+    }
+}
 
 async function call_fetch(
     url,
@@ -33,7 +59,6 @@ async function call_fetch(
 
 //Create or edit task
 async function create_or_edit_task(
-    access_token,
     url,
     id_form,
     method
@@ -163,3 +188,8 @@ async function delete_task(url) {
         }
     });
 }
+
+create_or_edit_task('http://127.0.0.1:8000/tasks', 'form_create_task', 'POST');
+create_or_edit_task('http://127.0.0.1:8000/tasks', 'form_edit_task', 'PATCH');
+view_tasks('http://127.0.0.1:8000/tasks');
+delete_task('http://127.0.0.1:8000/tasks');
