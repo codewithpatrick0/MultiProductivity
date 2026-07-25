@@ -16,7 +16,6 @@ async function use_refresh_token(){
             localStorage.setItem('refresh_token', result.refresh_token)
             return true;
         } else {
-            alert('Session expired')
             console.log('Server response: ', response.status)
             return false;
         }
@@ -28,8 +27,9 @@ async function use_refresh_token(){
 async function call_fetch(
     url,
     method,
-    object =null,
-    headers={}
+    object = null,
+    headers={},
+    isRetry = false
 ){
     try{
         const upperCaseMethod = method.toUpperCase();
@@ -49,6 +49,17 @@ async function call_fetch(
         }
 
         const response = await fetch(url, config)
+
+        if (response.status === 401 && !isRetry) {
+            const refreshed = await use_refresh_token();
+            
+            if (refreshed) {
+                return await call_fetch(url, method, object,headers, true)
+            } else {
+            alert('Session expired')
+            console.log(response.status)
+            }
+        }
         return response
     } catch(error) {
         alert('Internal error')
