@@ -83,13 +83,15 @@ async function create_or_edit_task(
         const object_data_form = Object.fromEntries(data_form)
         let urlApi = url;
 
+
         if (method.toUpperCase() == 'PATCH'){
             const task_id = document.getElementById('task_id_edit').value;
             urlApi += `/${task_id}`
             delete object_data_form.task_id;
+            delete object_data_form.id_category;
         }
         
-    
+        
         const response = await call_fetch(urlApi,
             method,
             object_data_form, 
@@ -200,6 +202,52 @@ async function delete_task(url) {
     });
 }
 
+//Load cateegories
+let categoriesAvailables = []
+
+async function load_categories(
+    url
+){
+
+    const categories_extracted = await call_fetch(url,
+        'GET',
+        null,
+        {'Accept': 'Application/json'}
+    )
+
+    if (categories_extracted === null) {
+        console.log('Network error loading categories')
+        return false
+    }
+
+    if (categories_extracted.ok) {
+        categoriesAvailables = await categories_extracted.json();
+        console.log(categoriesAvailables);
+        await render_categories_select();
+        return true;
+    } else {
+        console.log('Server response: ', categories_extracted.status)
+        return false;
+    }
+}
+//Render categories
+async function render_categories_select() {
+     const select_categories = document.getElementById('select_category')
+     const edit_categories = document.getElementById('edit_category')
+
+    const options_generated = categoriesAvailables.map(category =>
+        `
+        <option value=${category.id}>${category.name}</option>
+        `
+    ).join('');
+
+    select_categories.innerHTML = options_generated;
+    edit_categories.innerHTML += options_generated;
+    
+}
+
+//Tests JS
+load_categories('http://127.0.0.1:8000/categories')
 create_or_edit_task('http://127.0.0.1:8000/tasks', 'form_create_task', 'POST');
 create_or_edit_task('http://127.0.0.1:8000/tasks', 'form_edit_task', 'PATCH');
 view_tasks('http://127.0.0.1:8000/tasks');

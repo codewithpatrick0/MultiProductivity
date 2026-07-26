@@ -108,6 +108,9 @@ async def define_task(
     user_id: int = Depends(check_access_token),
     session: AsyncSession = Depends(get_session)
 ):  
+    if not task.info:
+        task.info = "No info"
+
     if not task.id_category:
         query_others = await session.execute(
             select(Category).where(
@@ -159,11 +162,12 @@ async def obtain_tasks(
     
 @app.patch('/tasks/{task_id}', response_model=TaskResponse)
 async def edit_task(
-    task_id: int,
+    task_id: int, 
     task: TaskEdit,
     user_id: int = Depends(check_access_token),
     session: AsyncSession = Depends(get_session)
 ):
+
     query = await session.execute(
         select(Task).where(
             Task.id==task_id,
@@ -183,6 +187,7 @@ async def edit_task(
         extracted_task.status = task.status
     if task.id_category:
         extracted_task.id_category = task.id_category
+
 
     await session.commit()
     await session.refresh(extracted_task)
@@ -252,7 +257,8 @@ async def obtain_categories(
         results = await session.execute(
             select(Category).where(
                 or_(Category.id_user == user_id, Category.id_user.is_(None))
-            )
+            ).order_by(Category.id_user.is_(None).desc(), 
+                       (Category.name == 'Others').desc())
         )
 
         extracted_categories = results.scalars().all()
