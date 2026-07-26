@@ -19,20 +19,35 @@ class TokenResponse(BaseResponseSchema):
     refresh_token: str
     token_type: str = "bearer"
 
-    model_config = ConfigDict(from_attributes=True)
-
 class TaskCreate(BaseModel):
+    id_category: int | None = None
     title: str = Field(max_length=100)
     info: str | None = "No info"
 
 class TaskEdit(BaseModel):
+    id_category: int | None = None
     title: str | None = Field(None, max_length=100)
     info: str | None = None
-    status: Literal['pending', 'in progress', 'completed'] = None
+    status: Literal['pending', 'in progress', 'completed'] | None = None
     
 class TaskResponse(BaseResponseSchema):
     id: int
     id_user: int
-    title: str 
+    id_category: int
+    title: str
     info: str | None = None
     status: str = "pending"
+
+class CategoryCreate(BaseModel):
+    name: str = Field(max_length=30)
+    color: str = Field(max_length=20)
+
+class CategoryEdit(BaseModel):
+    name: str | None = Field(None, max_length=30)
+    color: str | None = Field(None, max_length=20)
+
+class CategoryResponse(BaseResponseSchema):
+    id: int
+    id_user: int | None = None
+    name: str
+    color: str
