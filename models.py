@@ -23,12 +23,17 @@ class Task(Base):
     info: Mapped[str|None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(30), server_default='pending', nullable=False)
     id_category: Mapped[int] = mapped_column(BigInteger, ForeignKey('categories.id'), nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, server_default='1', nullable=False)
 
     __table_args__ = (
         CheckConstraint(
             "status IN ('pending', 'in progress', 'completed')",
             name="chk_status"
         ),
+        CheckConstraint(
+            "priority BETWEEN 1 AND 1000" ,
+            name = "chk_priority"
+            )
     )
 
     user: Mapped["User"] = relationship(back_populates="tasks")

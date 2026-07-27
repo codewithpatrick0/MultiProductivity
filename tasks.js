@@ -232,8 +232,8 @@ async function load_categories(
 }
 //Render categories
 async function render_categories_select() {
-     const select_categories = document.getElementById('select_category')
-     const edit_categories = document.getElementById('edit_category')
+    const select_categories = document.getElementById('select_category')
+    const edit_categories = document.getElementById('edit_category')
 
     const options_generated = categoriesAvailables.map(category =>
         `

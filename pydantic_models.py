@@ -23,12 +23,14 @@ class TaskCreate(BaseModel):
     id_category: int | None = None
     title: str = Field(max_length=100)
     info: str | None = "No info"
+    priority: int | None = Field(None, ge=1, le=1000)
 
 class TaskEdit(BaseModel):
     id_category: int | None = None
     title: str | None = Field(None, max_length=100)
     info: str | None = None
     status: Literal['pending', 'in progress', 'completed'] | None = None
+    priority: int | None = Field(None, ge=1, le=1000)
     
 class TaskResponse(BaseResponseSchema):
     id: int
@@ -37,6 +39,7 @@ class TaskResponse(BaseResponseSchema):
     title: str
     info: str | None = None
     status: str = "pending"
+    priority: int
 
 class CategoryCreate(BaseModel):
     name: str = Field(max_length=30)

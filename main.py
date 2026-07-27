@@ -121,9 +121,9 @@ async def define_task(
         if not others_category:
             raise HTTPException(status_code=500, detail="Default 'Others' category was not found.")
 
-        new_task = Task(id_user=user_id, id_category=others_category.id, title=task.title, info=task.info)
+        new_task = Task(id_user=user_id, id_category=others_category.id, title=task.title, info=task.info, priority=task.priority)
     else:
-        new_task = Task(id_user=user_id, id_category=task.id_category, title=task.title, info=task.info)
+        new_task = Task(id_user=user_id, id_category=task.id_category, title=task.title, info=task.info, priority=task.priority)
 
     try:
         session.add(new_task)
@@ -135,7 +135,8 @@ async def define_task(
             id_user=user_id,
             id_category=new_task.id_category,
             title=new_task.title,
-            info=new_task.info
+            info=new_task.info,
+            priority=new_task.priority
         )
     except Exception as e:
         await session.rollback()
@@ -187,7 +188,8 @@ async def edit_task(
         extracted_task.status = task.status
     if task.id_category:
         extracted_task.id_category = task.id_category
-
+    if task.priority:
+        extracted_task.priority = task.priority
 
     await session.commit()
     await session.refresh(extracted_task)
@@ -198,7 +200,8 @@ async def edit_task(
         id_category=extracted_task.id_category,
         title=extracted_task.title,
         info=extracted_task.info,
-        status=extracted_task.status
+        status=extracted_task.status,
+        priority=extracted_task.priority
     )
 
 @app.delete('/tasks/{task_id}')
@@ -258,7 +261,7 @@ async def obtain_categories(
             select(Category).where(
                 or_(Category.id_user == user_id, Category.id_user.is_(None))
             ).order_by(Category.id_user.is_(None).desc(), 
-                       (Category.name == 'Others').desc())
+                    (Category.name == 'Others').desc())
         )
 
         extracted_categories = results.scalars().all()
