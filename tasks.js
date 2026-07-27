@@ -83,7 +83,10 @@ async function create_or_edit_task(
         const object_data_form = Object.fromEntries(data_form)
         let urlApi = url;
 
-
+        if (object_data_form.priority === ""){
+            delete object_data_form.priority;
+        }
+        
         if (method.toUpperCase() == 'PATCH'){
             const task_id = document.getElementById('task_id_edit').value;
             urlApi += `/${task_id}`

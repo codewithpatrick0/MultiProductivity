@@ -21,7 +21,7 @@ class TokenResponse(BaseResponseSchema):
 
 class TaskCreate(BaseModel):
     id_category: int | None = None
-    title: str = Field(max_length=100)
+    title: str = Field(min_length=3, max_length=100)
     info: str | None = "No info"
     priority: int | None = Field(None, ge=1, le=1000)
 
