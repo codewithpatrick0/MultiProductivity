@@ -108,9 +108,8 @@ async def define_task(
     user_id: int = Depends(check_access_token),
     session: AsyncSession = Depends(get_session)
 ):  
-    if not task.info:
-        task.info = "No info"
-
+    if task.info == "":
+        task.info = None
     if not task.id_category:
         query_others = await session.execute(
             select(Category).where(
@@ -121,9 +120,9 @@ async def define_task(
         if not others_category:
             raise HTTPException(status_code=500, detail="Default 'Others' category was not found.")
 
-        new_task = Task(id_user=user_id, id_category=others_category.id, title=task.title, info=task.info, priority=task.priority)
+        new_task = Task(id_user=user_id, id_category=others_category.id, title=task.title, info=task.info, priority=task.priority, due_date=task.due_date, reminder_at=task.reminder_at)
     else:
-        new_task = Task(id_user=user_id, id_category=task.id_category, title=task.title, info=task.info, priority=task.priority)
+        new_task = Task(id_user=user_id, id_category=task.id_category, title=task.title, info=task.info, priority=task.priority, due_date=task.due_date, reminder_at=task.reminder_at)
 
     try:
         session.add(new_task)
@@ -136,7 +135,9 @@ async def define_task(
             id_category=new_task.id_category,
             title=new_task.title,
             info=new_task.info,
-            priority=new_task.priority
+            priority=new_task.priority,
+            due_date=new_task.due_date,
+            reminder_at=new_task.reminder_at
         )
     except Exception as e:
         await session.rollback()
@@ -190,6 +191,10 @@ async def edit_task(
         extracted_task.id_category = task.id_category
     if task.priority:
         extracted_task.priority = task.priority
+    if task.due_date:
+        extracted_task.due_date = task.due_date
+    if task.reminder_at:
+        extracted_task.reminder_at = task.reminder_at
 
     await session.commit()
     await session.refresh(extracted_task)
@@ -201,7 +206,9 @@ async def edit_task(
         title=extracted_task.title,
         info=extracted_task.info,
         status=extracted_task.status,
-        priority=extracted_task.priority
+        priority=extracted_task.priority,
+        due_date=extracted_task.due_date,
+        reminder_at=extracted_task.reminder_at
     )
 
 @app.delete('/tasks/{task_id}')
