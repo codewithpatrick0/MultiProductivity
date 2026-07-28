@@ -75,14 +75,21 @@ async function create_or_edit_task(
     method
 ){
     const form = document.getElementById(id_form);
-
+   
     form.addEventListener('submit', async function(event){
         event.preventDefault();
-        
+
         const data_form = new FormData(form)
         const object_data_form = Object.fromEntries(data_form)
         let urlApi = url;
 
+        if (object_data_form.due_date === ""){
+            delete object_data_form.due_date;
+        }
+
+        if (object_data_form.reminder_at === ""){
+            delete object_data_form.reminder_at;
+        }
         if (object_data_form.priority === ""){
             delete object_data_form.priority;
         }
@@ -91,7 +98,9 @@ async function create_or_edit_task(
             const task_id = document.getElementById('task_id_edit').value;
             urlApi += `/${task_id}`
             delete object_data_form.task_id;
-            delete object_data_form.id_category;
+            if (object_data_form.id_category===""){
+                delete object_data_form.id_category;
+            }
         }
         
         
@@ -249,8 +258,29 @@ async function render_categories_select() {
     
 }
 
+//Calcule date
+function calculate_date() {
+    return new Date().toISOString().split('T')[0];
+}
+
+//Calculate datetime
+function calculate_datetime(){
+    return new Date().toISOString().slice(0,16);
+}
 //Tests JS
-load_categories('http://127.0.0.1:8000/categories')
+const date_of_today = calculate_date();
+const datetime_of_today = calculate_datetime();
+const create_date_input = document.getElementById('create_date');
+const edit_date_input = document.getElementById('edit_date');
+
+const create_reminder_input = document.getElementById('create_reminder');
+const edit_reminder_input = document.getElementById('edit_reminder');
+
+create_reminder_input.min = datetime_of_today;
+edit_reminder_input.min = datetime_of_today;
+create_date_input.min = date_of_today
+edit_date_input.min = date_of_today;
+load_categories('http://127.0.0.1:8000/categories') 
 create_or_edit_task('http://127.0.0.1:8000/tasks', 'form_create_task', 'POST');
 create_or_edit_task('http://127.0.0.1:8000/tasks', 'form_edit_task', 'PATCH');
 view_tasks('http://127.0.0.1:8000/tasks');
