@@ -1,6 +1,7 @@
+from datetime import date, datetime
 from database import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import BigInteger, String, Text, ForeignKey, Integer, CheckConstraint, Boolean, Identity
+from sqlalchemy import BigInteger, String, Text, ForeignKey, Integer, CheckConstraint, Date, DateTime, Boolean, Identity
 
 class User(Base):
     __tablename__="users"
@@ -24,6 +25,9 @@ class Task(Base):
     status: Mapped[str] = mapped_column(String(30), server_default='pending', nullable=False)
     id_category: Mapped[int] = mapped_column(BigInteger, ForeignKey('categories.id'), nullable=False)
     priority: Mapped[int] = mapped_column(Integer, server_default='1', nullable=False)
+    due_date: Mapped[date|None] = mapped_column(Date, nullable=True)
+    reminder_at: Mapped[datetime|None] = mapped_column(DateTime, nullable=True)
+    id_parent_task: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('tasks.id'), nullable=True)
 
     __table_args__ = (
         CheckConstraint(
@@ -35,7 +39,11 @@ class Task(Base):
             name = "chk_priority"
             )
     )
-
+    parent: Mapped["Task | None"] = relationship(
+            remote_side=[id],
+            back_populates="subtasks"
+        )
+    subtasks: Mapped[list["Task"]] = relationship(back_populates="parent")
     user: Mapped["User"] = relationship(back_populates="tasks")
     category: Mapped["Category"] = relationship(back_populates="tasks")
 

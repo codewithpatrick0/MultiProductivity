@@ -86,7 +86,11 @@ async function create_or_edit_task(
         if (object_data_form.priority === ""){
             delete object_data_form.priority;
         }
-        
+
+        if (object_data_form.id_parent_task === ""){
+            delete object_data_form.id_parent_task;
+        }
+
         if (method.toUpperCase() == 'PATCH'){
             const task_id = document.getElementById('task_id_edit').value;
             urlApi += `/${task_id}`
@@ -147,15 +151,27 @@ async function view_tasks(url) {
         if (response.ok){
             const tasks_extracted = await response.json();
             if (tasks_extracted.length > 0){
-                const html_generated = tasks_extracted.map(task => 
-                    `
-                    <li><br>
-                        <strong>ID Task:</strong> ${task.id} <br>
-                        <strong>Title:</strong> ${task.title} <br>
-                        <strong>Info:</strong> ${task.info || 'No info'} <br>
-                        <strong>Status:</strong> ${task.status} </li> <br>
-                    `
-                ).join('');
+                const top_level = tasks_extracted.filter(t => t.id_parent_task === null);
+                const subtasks_by_parent = {};
+                tasks_extracted.filter(t => t.id_parent_task !== null).forEach(sub => {
+                    if (!subtasks_by_parent[sub.id_parent_task]) subtasks_by_parent[sub.id_parent_task] = [];
+                    subtasks_by_parent[sub.id_parent_task].push(sub);
+                });
+
+                const html_generated = top_level.map(task => {
+                    const children = subtasks_by_parent[task.id] || [];
+                    const children_html = children.map(sub =>
+                        `<li style="margin-left: 20px;">↳ ${sub.title} — ${sub.status}</li>`
+                    ).join('');
+                    return `
+                        <li><br>
+                            <strong>ID Task:</strong> ${task.id} <br>
+                            <strong>Title:</strong> ${task.title} <br>
+                            <strong>Info:</strong> ${task.info || 'No info'} <br>
+                            <strong>Status:</strong> ${task.status} </li> <br>
+                        <ul>${children_html}</ul>
+                    `;
+                }).join('');
                 tasks_list.innerHTML = html_generated
                 console.log(tasks_extracted);
             } else {
@@ -249,8 +265,29 @@ async function render_categories_select() {
     
 }
 
+//Load parent tasks
+async function load_parent_task_options(url) {
+    const tasks_extracted = await call_fetch(url, 'GET', null, {'Accept': 'application/json'});
+
+    if (tasks_extracted === null || !tasks_extracted.ok) {
+        console.log('Could not load parent task options');
+        return;
+    }
+
+    const all_tasks = await tasks_extracted.json();
+    const top_level_tasks = all_tasks.filter(task => task.id_parent_task === null);
+
+    const select_parent = document.getElementById('select_parent_task');
+    const options_generated = top_level_tasks.map(task =>
+        `<option value="${task.id}">${task.title}</option>`
+    ).join('');
+
+    select_parent.innerHTML = '<option value="">None (top-level task)</option>' + options_generated;
+}
+
 //Tests JS
 load_categories('http://127.0.0.1:8000/categories')
+load_parent_task_options('http://127.0.0.1:8000/tasks');
 create_or_edit_task('http://127.0.0.1:8000/tasks', 'form_create_task', 'POST');
 create_or_edit_task('http://127.0.0.1:8000/tasks', 'form_edit_task', 'PATCH');
 view_tasks('http://127.0.0.1:8000/tasks');
