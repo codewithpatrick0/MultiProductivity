@@ -102,6 +102,60 @@ async def refresh(
         refresh_token=refresh_token
     )
 
+async def _validate_parent_task(
+    session: AsyncSession,
+    parent_id: int,
+    user_id: int,
+    exclude_task_id: int | None = None
+) -> Task:
+    if exclude_task_id is not None and parent_id == exclude_task_id:
+        raise HTTPException(status_code=400, detail='A task cannot be its own parent.')
+
+    query = await session.execute(
+        select(Task).where(
+            Task.id == parent_id,
+            Task.id_user == user_id
+            )
+    )
+    parent_task = query.scalar_one_or_none()
+
+    if not parent_task:
+        raise HTTPException(status_code=404, detail='The parent task does not exist or does not belong to you.')
+
+    if parent_task.id_parent_task is not None:
+        raise HTTPException(status_code=400, detail='A subtask cannot be used as a parent task.')
+
+    if exclude_task_id is not None:
+        subtasks_query = await session.execute(
+            select(Task.id).where(Task.id_parent_task == exclude_task_id).limit(1)
+        )
+        if subtasks_query.scalar_one_or_none() is not None:
+            raise HTTPException(status_code=400, detail='A task that already has subtasks cannot become a subtask itself.')
+
+    return parent_task
+
+async def _sync_parent_status(session: AsyncSession, parent_id: int):
+    query = await session.execute(
+        select(Task).where(Task.id == parent_id)
+    )
+    parent_task = query.scalar_one_or_none()
+
+    if not parent_task:
+        return
+
+    subtasks_query = await session.execute(
+        select(Task.status).where(Task.id_parent_task == parent_id)
+    )
+    subtask_statuses = subtasks_query.scalars().all()
+
+    if not subtask_statuses:
+        return
+
+    if all(subtask_status == 'completed' for subtask_status in subtask_statuses):
+        parent_task.status = 'completed'
+    elif parent_task.status == 'completed':
+        parent_task.status = 'in progress'
+
 @app.post('/tasks', response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 async def define_task(
     task: TaskCreate,
@@ -110,29 +164,44 @@ async def define_task(
 ):  
     if task.info == "":
         task.info = None
+
+    if not task.info:
+        task.info = "No info"
+
+    if task.id_parent_task is not None:
+        await _validate_parent_task(session, task.id_parent_task, user_id)
+
+    if task.due_date == "":
+        task.due_date = None
+
     if not task.id_category:
         query_others = await session.execute(
             select(Category).where(
                 Category.name=="Others", Category.id_user.is_(None))
         )
-
         others_category = query_others.scalar_one_or_none()
         if not others_category:
             raise HTTPException(status_code=500, detail="Default 'Others' category was not found.")
 
         new_task = Task(id_user=user_id, id_category=others_category.id, title=task.title, info=task.info, priority=task.priority, due_date=task.due_date, reminder_at=task.reminder_at)
     else:
-        new_task = Task(id_user=user_id, id_category=task.id_category, title=task.title, info=task.info, priority=task.priority, due_date=task.due_date, reminder_at=task.reminder_at)
+        new_task = Task(id_user=user_id, id_category=task.id_category, title=task.title, info=task.info, priority=task.priority, id_parent_task=task.id_parent_task, due_date=task.due_date, reminder_at=task.reminder_at)
+
 
     try:
         session.add(new_task)
         await session.commit()
         await session.refresh(new_task)
 
+        if new_task.id_parent_task is not None:
+            await _sync_parent_status(session, new_task.id_parent_task)
+            await session.commit()
+
         return TaskResponse(
             id=new_task.id,
             id_user=user_id,
             id_category=new_task.id_category,
+            id_parent_task=new_task.id_parent_task,
             title=new_task.title,
             info=new_task.info,
             priority=new_task.priority,
@@ -180,7 +249,12 @@ async def edit_task(
 
     if not extracted_task:
         raise HTTPException(status_code=404, detail='The ID does not exist or the task does not belong to you.')
-    
+
+    if task.id_parent_task:
+        await _validate_parent_task(session, task.id_parent_task, user_id, exclude_task_id=task_id)
+
+    previous_parent_id = extracted_task.id_parent_task
+
     if task.title :
         extracted_task.title = task.title
     if task.info:
@@ -195,6 +269,17 @@ async def edit_task(
         extracted_task.due_date = task.due_date
     if task.reminder_at:
         extracted_task.reminder_at = task.reminder_at
+    if task.id_parent_task:
+        extracted_task.id_parent_task = task.id_parent_task
+
+    await session.commit()
+    await session.refresh(extracted_task)
+
+    if previous_parent_id is not None and previous_parent_id != extracted_task.id_parent_task:
+        await _sync_parent_status(session, previous_parent_id)
+    if extracted_task.id_parent_task is not None:
+        await _sync_parent_status(session, extracted_task.id_parent_task)
+
 
     await session.commit()
     await session.refresh(extracted_task)
@@ -203,6 +288,7 @@ async def edit_task(
         id=extracted_task.id,
         id_user=user_id,
         id_category=extracted_task.id_category,
+        id_parent_task=extracted_task.id_parent_task,
         title=extracted_task.title,
         info=extracted_task.info,
         status=extracted_task.status,
@@ -227,9 +313,15 @@ async def delete_task(
 
     if not extracted_task:
         raise HTTPException(status_code=404, detail='Task not found.')
-    
+
+    parent_id = extracted_task.id_parent_task
+
     await session.delete(extracted_task)
     await session.commit()
+
+    if parent_id is not None:
+        await _sync_parent_status(session, parent_id)
+        await session.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

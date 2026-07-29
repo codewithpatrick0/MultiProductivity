@@ -28,6 +28,8 @@ class Task(Base):
     due_date: Mapped[date|None] = mapped_column(Date, nullable=True)
     reminder_at: Mapped[datetime|None] = mapped_column(DateTime, nullable=True)
 
+    id_parent_task: Mapped[int | None] = mapped_column(BigInteger, ForeignKey('tasks.id'), nullable=True)
+
     __table_args__ = (
         CheckConstraint(
             "status IN ('pending', 'in progress', 'completed')",
@@ -38,7 +40,11 @@ class Task(Base):
             name = "chk_priority"
             )
     )
-
+    parent: Mapped["Task | None"] = relationship(
+            remote_side=[id],
+            back_populates="subtasks"
+        )
+    subtasks: Mapped[list["Task"]] = relationship(back_populates="parent")
     user: Mapped["User"] = relationship(back_populates="tasks")
     category: Mapped["Category"] = relationship(back_populates="tasks")
 
