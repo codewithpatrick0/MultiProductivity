@@ -1,4 +1,4 @@
-# TaskTracker (formerly MultiProductivity)
+# TaskTracker
 
 A personal task manager built to go deeper into async backend architecture and real frontend development — auth, ownership-scoped CRUD, categories, priorities, subtasks with parent auto-completion, and due dates, all built incrementally with a real GitHub Issues + PR workflow.
 
@@ -32,6 +32,17 @@ Built without a framework on purpose, to actually learn the DOM, events, and fet
 - No cross-field validation yet between due_date and reminder_at (a reminder can currently be set without a due date)
 - No past-date validation on due_date
 - Visual design is minimal - functional HTML/CSS, not a polished UI
+
+## Setup
+
+1. Install dependencies: `pip install -r requirements.txt`
+2. Create a `.env` file in the project root with:
+   ```
+   DATABASE_URL=postgresql+asyncpg://user:password@host/dbname
+   SECRET_KEY=your-secret-key
+   ```
+3. Run the backend: `uvicorn main:app --reload`
+4. Serve `index.html`/`tasks.html` with a static server (e.g. Live Server) pointed at `http://127.0.0.1:8000`
 
 ## Tech Stack
 
